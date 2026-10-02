@@ -72,3 +72,7 @@ ln -s "$PWD" ~/.dsh/profiles/<profile>/node_modules/dsh-mail
 npm test                                   # 单元测试
 node scripts/smoke-mailbox.mjs <REF> <user> <imapHost>   # 真实邮箱只读冒烟
 ```
+
+## 许可证
+
+MIT，见 [LICENSE](LICENSE)。`lib/host.js` 打包了 imapflow、nodemailer、mailparser 及其依赖，各自的许可证原文见 [lib/THIRD_PARTY_LICENSES.txt](lib/THIRD_PARTY_LICENSES.txt)。

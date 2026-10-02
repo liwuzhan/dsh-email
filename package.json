@@ -18,8 +18,16 @@
     "lib/index.js",
     "lib/host.js",
     "lib/client.js",
-    "README.md"
+    "lib/THIRD_PARTY_LICENSES.txt",
+    "README.md",
+    "LICENSE"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/liwuzhan/dsh-email.git"
+  },
+  "homepage": "https://github.com/liwuzhan/dsh-email",
+  "bugs": "https://github.com/liwuzhan/dsh-email/issues",
   "scripts": {
     "build": "node scripts/build.mjs",
     "test": "node --test test/*.test.mjs"
