@@ -51,7 +51,9 @@ export function normalizeConfig(raw = {}) {
       notifyTo,
       allowedFrom: allow.ok ? allow.list : [],
       authCheck,
-      pollSeconds: num(raw.pollSeconds, 20, 5, 3600),
+      // 默认 120 秒：每小时 30 次登录，兼顾"回信后不用久等"和"别把服务商惹毛"。
+      // 调小可以更快响应（下限 5 秒），代价是登录频率按比例上升。
+      pollSeconds: num(raw.pollSeconds, 120, 5, 3600),
       maxBodyChars: num(raw.maxBodyChars, 32768, 1000, 1_000_000),
       maxSendPerHour: num(raw.maxSendPerHour, 30, 1, 1000),
       stateDir: typeof raw.stateDir === "string" && raw.stateDir.length > 0 ? raw.stateDir : join(homedir(), ".dsh", "dsh-mail"),

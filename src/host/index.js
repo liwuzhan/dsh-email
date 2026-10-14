@@ -305,8 +305,11 @@ export function apply(ctx, rawConfig) {
       runtime.polling = false;
     }
     if (stopped) return; // ★ 卸载期间正在 await 的一轮结束后不能再排下一轮（relay 泄漏的根因）
+    // 正常按轮询间隔；失败时指数退避，但第一次重试仍按轮询间隔（4 分钟内恢复的临时故障
+    // 不该被放大成 4 分钟起步），之后逐步拉长到 10 分钟封顶，避免长时间断网时反复登录。
     const base = cfg.pollSeconds * 1000;
-    const backoff = runtime.consecutiveFailures === 0 ? base : Math.min(base * 2 ** runtime.consecutiveFailures, 10 * 60 * 1000);
+    const backoff =
+      runtime.consecutiveFailures === 0 ? base : Math.min(base * 2 ** (runtime.consecutiveFailures - 1), 10 * 60 * 1000);
     schedule(backoff);
   }
 
