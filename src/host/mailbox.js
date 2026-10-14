@@ -135,6 +135,25 @@ export class Mailbox {
   }
 
   /**
+   * 收件箱当前最大的 UID（空邮箱为 0）。
+   *
+   * 不能用 SELECT 的 UIDNEXT 算：RFC 3501 里 UIDNEXT 是可选响应码，163 就不返回
+   * （实测 `mailbox.uidNext === undefined`，`Number(undefined) - 1` 得到 NaN，
+   * 之后拼出 "NaN:*" 这样的 sequence set 直接抛 InvalidSequenceSet）。
+   * 也不能按序号取最后一封：163 对 `N:N`（如 `1:1`）返回空，只认 `1:*`。
+   * 所以统一走 `1:*`（包含全部邮件）取最大 UID——空邮箱与各家服务器都适用。
+   */
+  async topUidLocked(client) {
+    const exists = Number(client.mailbox?.exists ?? 0);
+    if (!Number.isFinite(exists) || exists <= 0) return 0;
+    let top = 0;
+    for await (const m of client.fetch("1:*", { uid: true }, { uid: true })) {
+      if (Number.isFinite(m.uid) && m.uid > top) top = m.uid;
+    }
+    return top;
+  }
+
+  /**
    * 拉取 lastUid 之后的新邮件。cursor 为 { uidValidity, lastUid }。
    * - 首次（lastUid=null）或 UIDVALIDITY 变化：只取基线，不返回邮件（不回放历史）。
    * @returns {Promise<{ cursor: {uidValidity:number,lastUid:number}, baselined: boolean, messages: object[] }>}
@@ -143,7 +162,7 @@ export class Mailbox {
     return this.withInbox(async (client) => {
       const box = client.mailbox;
       const uidValidity = Number(box.uidValidity);
-      const top = Math.max(0, Number(box.uidNext) - 1);
+      const top = await this.topUidLocked(client);
       if (cursor.lastUid == null || cursor.uidValidity !== uidValidity) {
         return { cursor: { uidValidity, lastUid: top }, baselined: true, messages: [] };
       }
